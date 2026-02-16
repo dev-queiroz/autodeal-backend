@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -44,6 +45,10 @@ public class FuncionarioService {
         return repository.save(funcionario);
     }
 
+    public List<Funcionario> listarTodos() {
+        return repository.findAll();
+    }
+
     public Optional<Funcionario> buscarPorEmail(Email email) {
         return repository.findByEmail(email);
     }
@@ -54,5 +59,18 @@ public class FuncionarioService {
 
     public Optional<Funcionario> buscarPorId(Long id) {
         return repository.findById(id);
+    }
+
+    @Transactional
+    public void trocarSenha(Long id, String senhaAtual, String novaSenha) {
+        Funcionario f = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Funcionário não encontrado"));
+
+        if (!passwordEncoder.matches(senhaAtual, f.getSenhaHash())) {
+            throw new IllegalArgumentException("Senha atual incorreta");
+        }
+
+        f.atualizarSenha(passwordEncoder.encode(novaSenha));
+        repository.save(f);
     }
 }
