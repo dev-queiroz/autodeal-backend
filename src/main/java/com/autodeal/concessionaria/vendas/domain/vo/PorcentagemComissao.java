@@ -11,7 +11,7 @@ public final class PorcentagemComissao {
 
     private final BigDecimal valor;
 
-    private PorcentagemComissao(BigDecimal valor) {
+    public PorcentagemComissao(BigDecimal valor) {
         this.valor = valor.setScale(2, RoundingMode.HALF_EVEN);
     }
 

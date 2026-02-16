@@ -1,5 +1,6 @@
 package com.autodeal.concessionaria.estoque.domain;
 
+import com.autodeal.concessionaria.crm.domain.Cliente;
 import com.autodeal.concessionaria.estoque.domain.enums.EstadoVeiculo;
 import com.autodeal.concessionaria.shared.vo.Dinheiro;
 import com.autodeal.concessionaria.shared.vo.PlacaVeicular;
@@ -66,6 +67,10 @@ public class Veiculo {
     @JoinColumn(name = "fornecedor_id")
     private Fornecedor fornecedor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
+
     @Column(name = "data_entrada_estoque")
     private LocalDate dataEntradaEstoque = LocalDate.now();
 
@@ -108,7 +113,7 @@ public class Veiculo {
             throw new IllegalStateException("Não é possível marcar como vendido um veículo já vendido ou bloqueado");
         }
     }
-
+    
     public void desativar() {
         this.ativo = false;
     }
