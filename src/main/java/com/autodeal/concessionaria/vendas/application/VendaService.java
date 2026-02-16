@@ -42,19 +42,25 @@ public class VendaService {
             throw new IllegalStateException("Veículo não está disponível para venda");
         }
 
-        Cliente cliente = new Cliente(); // Placeholder - em produção viria de ClienteService
+        Cliente cliente = veiculo.getCliente();
+        if (cliente == null) {
+            throw new IllegalStateException("Veículo não está associado a um cliente");
+        }
+
         Funcionario vendedor = funcionarioService.buscarPorId(vendedorId)
                 .orElseThrow(() -> new IllegalArgumentException("Vendedor não encontrado"));
 
         Dinheiro precoFinal = calculadora.calcularPrecoVendaFinal(veiculo, descontoPercentual);
-        PorcentagemComissao comissao = PorcentagemComissao.of(vendedor.getPorcentagemComissao());
+        PorcentagemComissao comissao =
+                new PorcentagemComissao(calculadora.calcularComissaoVendedor(precoFinal, vendedor.getPorcentagemComissao()).getValue());
 
         if (!calculadora.validarMargemMinima(veiculo, precoFinal)) {
-            throw new IllegalArgumentException("Margem abaixo do mínimo permitido");
+            throw new IllegalArgumentException("Margem de lucro abaixo do mínimo permitido");
         }
 
         Venda venda = new Venda(veiculo, cliente, vendedor, precoFinal, comissao);
 
+        // Atualiza estado do veículo
         veiculoService.alterarEstado(veiculoId, EstadoVeiculo.VENDIDO);
 
         return vendaRepository.save(venda);
