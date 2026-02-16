@@ -1,5 +1,6 @@
 package com.autodeal.concessionaria.estoque.adapter.in;
 
+import com.autodeal.concessionaria.estoque.application.FornecedorService;
 import com.autodeal.concessionaria.estoque.application.VeiculoService;
 import com.autodeal.concessionaria.estoque.domain.Fornecedor;
 import com.autodeal.concessionaria.estoque.domain.Veiculo;
@@ -21,14 +22,19 @@ import java.util.List;
 public class VeiculoController {
 
     private final VeiculoService veiculoService;
+    private final FornecedorService fornecedorService;
 
-    public VeiculoController(VeiculoService veiculoService) {
+    public VeiculoController(VeiculoService veiculoService, FornecedorService fornecedorService) {
         this.veiculoService = veiculoService;
+        this.fornecedorService = fornecedorService;
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('GERENTE', 'ADMIN')")
     public ResponseEntity<VeiculoResponse> cadastrar(@Valid @RequestBody VeiculoRequest request) {
+        Fornecedor fornecedor = fornecedorService.buscarPorId(request.fornecedorId())
+                .orElseThrow(() -> new IllegalArgumentException("Fornecedor não encontrado: " + request.fornecedorId()));
+
         Veiculo veiculo = veiculoService.cadastrarVeiculo(
                 request.chassi(),
                 PlacaVeicular.of(request.placa()),
@@ -41,10 +47,29 @@ public class VeiculoController {
                 request.estadoInicial(),
                 Dinheiro.of(request.precoCompra()),
                 Dinheiro.of(request.precoVendaSugerido()),
-                new Fornecedor() // Placeholder — substitua por FornecedorService.buscarPorId(request.fornecedorId())
+                fornecedor
         );
 
-        return ResponseEntity.ok(toResponse(veiculo));
+        VeiculoResponse response = new VeiculoResponse(
+                veiculo.getId(),
+                veiculo.getChassi(),
+                veiculo.getPlaca().getValue(),
+                veiculo.getMarca(),
+                veiculo.getModelo(),
+                veiculo.getAnoFabricacao(),
+                veiculo.getAnoModelo(),
+                veiculo.getCor(),
+                veiculo.getQuilometragem(),
+                veiculo.getEstado(),
+                veiculo.getPrecoCompra().getValue(),
+                veiculo.getPrecoVendaSugerido().getValue(),
+                fornecedor.getId(),
+                fornecedor.getNome().getValue(),
+                veiculo.getDataEntradaEstoque(),
+                veiculo.isAtivo()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -91,8 +116,8 @@ public class VeiculoController {
                 v.getEstado(),
                 v.getPrecoCompra().getValue(),
                 v.getPrecoVendaSugerido().getValue(),
-                1L, // Placeholder: fornecedorId
-                "Fornecedor Exemplo", // Placeholder: fornecedorNome
+                v.getFornecedor().getId(),
+                v.getFornecedor().getNome().getValue(),
                 v.getDataEntradaEstoque(),
                 v.isAtivo()
         );
