@@ -28,5 +28,9 @@ spring:
       hibernate:
         format_sql: true
 
+jwt:
+  secret: sua-chave-secreta-muito-longa-e-segura-aqui-32-caracteres-ou-mais
+  expiration: 86400000  # 24 horas em milissegundos
+
 # Ativa o ProblemDetail (RFC 7807) nativo do Spring 3
 spring.mvc.problemdetails.enabled: true
