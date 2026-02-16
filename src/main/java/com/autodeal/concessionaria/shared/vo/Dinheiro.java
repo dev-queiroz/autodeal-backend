@@ -8,7 +8,7 @@ public final class Dinheiro {
 
     private final BigDecimal value;
 
-    private Dinheiro(BigDecimal value) {
+    public Dinheiro(BigDecimal value) {
         this.value = value.setScale(2, RoundingMode.HALF_EVEN);
     }
 
