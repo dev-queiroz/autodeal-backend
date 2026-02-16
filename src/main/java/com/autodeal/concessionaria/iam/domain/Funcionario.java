@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -47,6 +48,9 @@ public class Funcionario {
 
     @Column(nullable = false)
     private boolean ativo = true;
+
+    @Column(name = "porcentagem_comissao", precision = 5, scale = 2)
+    private BigDecimal porcentagemComissao;
 
     @Column(name = "data_cadastro")
     private LocalDateTime dataCadastro = LocalDateTime.now();
