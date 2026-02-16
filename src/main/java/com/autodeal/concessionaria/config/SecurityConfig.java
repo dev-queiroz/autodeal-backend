@@ -3,6 +3,7 @@ package com.autodeal.concessionaria.config;
 import com.autodeal.concessionaria.security.AuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -39,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/h2-console/**", "/actuator/**").permitAll()
                         .requestMatchers("/api/estoque/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/funcionarios").hasRole("ADMIN")
+                        .requestMatchers("/api/funcionarios/**").hasAnyRole("ADMIN", "GERENTE")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
