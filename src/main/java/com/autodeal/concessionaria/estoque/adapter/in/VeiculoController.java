@@ -3,6 +3,7 @@ package com.autodeal.concessionaria.estoque.adapter.in;
 import com.autodeal.concessionaria.estoque.application.VeiculoService;
 import com.autodeal.concessionaria.estoque.domain.Fornecedor;
 import com.autodeal.concessionaria.estoque.domain.Veiculo;
+import com.autodeal.concessionaria.estoque.domain.enums.EstadoVeiculo;
 import com.autodeal.concessionaria.estoque.dto.VeiculoRequest;
 import com.autodeal.concessionaria.estoque.dto.VeiculoResponse;
 import com.autodeal.concessionaria.estoque.dto.VeiculoResumoResponse;
@@ -40,58 +41,73 @@ public class VeiculoController {
                 request.estadoInicial(),
                 Dinheiro.of(request.precoCompra()),
                 Dinheiro.of(request.precoVendaSugerido()),
-                new Fornecedor() // Placeholder — em produção viria de um FornecedorService.buscarPorId(request.fornecedorId())
+                new Fornecedor() // Placeholder — substitua por FornecedorService.buscarPorId(request.fornecedorId())
         );
 
-        // Converter para Response (pode usar mapper depois)
-        VeiculoResponse response = new VeiculoResponse(
-                veiculo.getId(),
-                veiculo.getChassi(),
-                veiculo.getPlaca().getValue(),
-                veiculo.getMarca(),
-                veiculo.getModelo(),
-                veiculo.getAnoFabricacao(),
-                veiculo.getAnoModelo(),
-                veiculo.getCor(),
-                veiculo.getQuilometragem(),
-                veiculo.getEstado(),
-                veiculo.getPrecoCompra().getValue(),
-                veiculo.getPrecoVendaSugerido().getValue(),
-                1L, // fornecedorId placeholder
-                "Fornecedor Exemplo", // placeholder
-                veiculo.getDataEntradaEstoque(),
-                veiculo.isAtivo()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(toResponse(veiculo));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<VeiculoResponse> buscarPorId(@PathVariable Long id) {
         return veiculoService.buscarPorId(id)
-                .map(v -> /* converter para VeiculoResponse */ ResponseEntity.ok(new VeiculoResponse(/* ... */)))
-                .orElse(ResponseEntity.notFound().build());
+                .map(this::toResponse)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<VeiculoResumoResponse>> listarDisponiveis() {
-        return ResponseEntity.ok(
-                veiculoService.listarDisponiveisParaVenda().stream()
-                        .map(v -> new VeiculoResumoResponse(
-                                v.getId(),
-                                v.getPlaca().getValue(),
-                                v.getMarca(),
-                                v.getModelo(),
-                                v.getAnoModelo(),
-                                v.getEstado(),
-                                v.getPrecoVendaSugerido().getValue(),
-                                v.isAtivo()
-                        ))
-                        .toList()
+        List<VeiculoResumoResponse> resumos = veiculoService.listarDisponiveisParaVenda().stream()
+                .map(this::toResumoResponse)
+                .toList();
+
+        return ResponseEntity.ok(resumos);
+    }
+
+    @PutMapping("/{id}/estado")
+    @PreAuthorize("hasAnyRole('GERENTE', 'ADMIN')")
+    public ResponseEntity<VeiculoResponse> alterarEstado(
+            @PathVariable Long id,
+            @RequestBody EstadoVeiculo novoEstado) {
+
+        Veiculo atualizado = veiculoService.alterarEstado(id, novoEstado);
+        return ResponseEntity.ok(toResponse(atualizado));
+    }
+
+    // Métodos auxiliares de mapeamento (evita duplicação)
+    private VeiculoResponse toResponse(Veiculo v) {
+        return new VeiculoResponse(
+                v.getId(),
+                v.getChassi(),
+                v.getPlaca().getValue(),
+                v.getMarca(),
+                v.getModelo(),
+                v.getAnoFabricacao(),
+                v.getAnoModelo(),
+                v.getCor(),
+                v.getQuilometragem(),
+                v.getEstado(),
+                v.getPrecoCompra().getValue(),
+                v.getPrecoVendaSugerido().getValue(),
+                1L, // Placeholder: fornecedorId
+                "Fornecedor Exemplo", // Placeholder: fornecedorNome
+                v.getDataEntradaEstoque(),
+                v.isAtivo()
         );
     }
 
-    // Outros endpoints (PUT para alterar estado, DELETE soft, etc.) podem vir depois
+    private VeiculoResumoResponse toResumoResponse(Veiculo v) {
+        return new VeiculoResumoResponse(
+                v.getId(),
+                v.getPlaca().getValue(),
+                v.getMarca(),
+                v.getModelo(),
+                v.getAnoModelo(),
+                v.getEstado(),
+                v.getPrecoVendaSugerido().getValue(),
+                v.isAtivo()
+        );
+    }
 }
