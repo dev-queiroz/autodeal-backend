@@ -8,6 +8,7 @@ import com.autodeal.concessionaria.shared.vo.NomeCompleto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,6 +37,10 @@ public class FornecedorService {
 
         Fornecedor fornecedor = new Fornecedor(nome, cnpj, email, telefone, contatoResponsavel);
         return repository.save(fornecedor);
+    }
+
+    public List<Fornecedor> buscarTodos() {
+        return repository.findAll();
     }
 
     @Transactional(readOnly = true)
