@@ -12,8 +12,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -22,11 +20,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final AuthenticationFilter authenticationFilter;
+    private final EncoderConfig encoderConfig;
     private final org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     public SecurityConfig(AuthenticationFilter authenticationFilter,
+                          EncoderConfig encoderConfig,
                           org.springframework.security.core.userdetails.UserDetailsService userDetailsService) {
         this.authenticationFilter = authenticationFilter;
+        this.encoderConfig = encoderConfig;
         this.userDetailsService = userDetailsService;
     }
 
@@ -50,14 +51,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);  // <-- Construtor com UserDetailsService
-        authProvider.setPasswordEncoder(passwordEncoder());  // <-- Setter ainda ok para passwordEncoder
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(encoderConfig.passwordEncoder());  // Spring injeta automaticamente do EncoderConfig
         return authProvider;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     @Bean
