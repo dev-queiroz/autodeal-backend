@@ -9,33 +9,35 @@ import java.math.BigDecimal;
 @Component
 public class CalculadoraPrecoVenda {
 
-    private static final BigDecimal MARGEM_MINIMA = new BigDecimal("0.15"); // 15% mínimo sobre compra
-    private static final BigDecimal TAXA_ADMINISTRATIVA = new BigDecimal("500.00");
-    private static final BigDecimal PERCENTUAL_IMPOSTOS = new BigDecimal("0.12"); // exemplo 12%
+    private static final BigDecimal MARGEM_MINIMA = new BigDecimal("0.15"); // 15%
+    private static final BigDecimal TAXA_ADMIN = new BigDecimal("500.00");
+    private static final BigDecimal IMPOSTOS = new BigDecimal("0.12"); // 12% exemplo
 
-    public Dinheiro calcularPrecoVendaFinal(Veiculo veiculo, BigDecimal descontoPercentual) {
-        Dinheiro precoBase = veiculo.getPrecoVendaSugerido();
+    public Dinheiro calcularPrecoFinal(Veiculo veiculo, BigDecimal descontoPct) {
+        Dinheiro base = veiculo.getPrecoVendaSugerido();
 
-        // Aplica desconto se houver
-        if (descontoPercentual != null && descontoPercentual.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal desconto = precoBase.getValue().multiply(descontoPercentual.divide(new BigDecimal("100")));
-            precoBase = precoBase.subtrair(Dinheiro.of(desconto));
+        BigDecimal desconto = BigDecimal.ZERO;
+        if (descontoPct != null && descontoPct.compareTo(BigDecimal.ZERO) > 0) {
+            desconto = base.getValue().multiply(descontoPct.divide(BigDecimal.valueOf(100)));
         }
 
-        // Adiciona impostos e taxa administrativa
-        BigDecimal impostos = precoBase.getValue().multiply(PERCENTUAL_IMPOSTOS);
-        BigDecimal precoComImpostos = precoBase.getValue().add(impostos).add(TAXA_ADMINISTRATIVA);
+        BigDecimal comImpostos = base.getValue().add(base.getValue().multiply(IMPOSTOS)).add(TAXA_ADMIN);
+        Dinheiro precoFinal = new Dinheiro(comImpostos.subtract(desconto));
 
-        return Dinheiro.of(precoComImpostos);
+        if (!validarMargemMinima(veiculo, precoFinal)) {
+            throw new IllegalArgumentException("Margem abaixo do mínimo permitido");
+        }
+
+        return precoFinal;
     }
 
-    public Dinheiro calcularComissaoVendedor(Dinheiro valorVenda, BigDecimal porcentagemComissao) {
-        return Dinheiro.of(valorVenda.getValue().multiply(porcentagemComissao.divide(new BigDecimal("100"))));
+    public Dinheiro calcularComissao(Dinheiro valorVenda, BigDecimal porcentagem) {
+        return Dinheiro.of(valorVenda.getValue().multiply(porcentagem.divide(BigDecimal.valueOf(100))));
     }
 
-    public boolean validarMargemMinima(Veiculo veiculo, Dinheiro precoVendaFinal) {
-        BigDecimal margem = precoVendaFinal.getValue().subtract(veiculo.getPrecoCompra().getValue());
-        BigDecimal margemPercentual = margem.divide(veiculo.getPrecoCompra().getValue(), 4, BigDecimal.ROUND_HALF_UP);
-        return margemPercentual.compareTo(MARGEM_MINIMA) >= 0;
+    private boolean validarMargemMinima(Veiculo veiculo, Dinheiro precoFinal) {
+        BigDecimal margem = precoFinal.getValue().subtract(veiculo.getPrecoCompra().getValue());
+        BigDecimal pct = margem.divide(veiculo.getPrecoCompra().getValue(), 4, BigDecimal.ROUND_HALF_UP);
+        return pct.compareTo(MARGEM_MINIMA) >= 0;
     }
 }
