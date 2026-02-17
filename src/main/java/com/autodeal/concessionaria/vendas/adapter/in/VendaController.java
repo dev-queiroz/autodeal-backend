@@ -21,7 +21,7 @@ public class VendaController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('VENDEDOR', 'GERENTE', 'ADMIN')")
-    public ResponseEntity<VendaResponse> registrarVenda(@Valid @RequestBody VendaRequest request) {
+    public ResponseEntity<VendaResponse> registrar(@Valid @RequestBody VendaRequest request) {
         Venda venda = vendaService.registrarVenda(
                 request.veiculoId(),
                 request.clienteId(),
@@ -45,4 +45,6 @@ public class VendaController {
 
         return ResponseEntity.ok(response);
     }
+
+    // GET por ID, listagem, cancelamento etc. podem ser adicionados depois
 }
