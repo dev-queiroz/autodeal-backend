@@ -22,20 +22,28 @@ public class Financiamento {
     @JoinColumn(name = "venda_id")
     private Venda venda;
 
+    @Column(nullable = false)
     private BigDecimal valorFinanciado;
+
+    @Column(nullable = false)
     private BigDecimal taxaJurosMensal;
+
+    @Column(nullable = false)
     private int quantidadeParcelas;
+
+    @Column(nullable = false)
     private LocalDate dataInicio;
 
     @ElementCollection
+    @CollectionTable(name = "financiamento_parcelas", joinColumns = @JoinColumn(name = "financiamento_id"))
     private List<Parcela> parcelas;
 
-    public Financiamento(Venda venda, BigDecimal valorFinanciado, BigDecimal taxaJurosMensal, int parcelas) {
+    public Financiamento(Venda venda, BigDecimal valorFinanciado, BigDecimal taxaJurosMensal, int quantidadeParcelas) {
         this.venda = venda;
         this.valorFinanciado = valorFinanciado;
         this.taxaJurosMensal = taxaJurosMensal;
-        this.quantidadeParcelas = parcelas;
+        this.quantidadeParcelas = quantidadeParcelas;
         this.dataInicio = LocalDate.now();
-        // Calcular parcelas aqui ou em service
+        // Aqui você pode calcular as parcelas no service ou no construtor
     }
 }
